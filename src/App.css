@@ -1,3 +1,5 @@
+@import "katex/dist/katex.min.css";
+
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }
@@ -12,7 +14,6 @@
   font-weight: 400;
 
   color: #0f0f0f;
-  background-color: #f6f6f6;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -35,6 +36,11 @@ html, body {
   flex-direction: column;
   justify-content: center;
   text-align: center;
+}
+
+.cm-editor {
+  justify-content: left;
+  text-align: left;
 }
 
 .logo {
