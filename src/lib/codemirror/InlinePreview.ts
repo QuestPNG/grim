@@ -116,7 +116,6 @@ function inlineMarkdownPlugin() {
           const listRegex = /^([*-]) (.*)$/gm
           let listMatch
           while ((listMatch = listRegex.exec(text)) !== null) {
-            const marker = listMatch[1]
             const content = listMatch[2]
             const start = from + listMatch.index
             const end = start + listMatch[0].length
@@ -175,16 +174,11 @@ function inlineMarkdownPlugin() {
 
             if (inSelection) continue
 
-
             const deco = Decoration.replace({
               widget: new (class extends WidgetType {
                 toDOM() {
                   const span = document.createElement("span")
                   try {
-                    /*span.innerHTML = katex.renderToString(content, {
-                      throwOnError: false,
-                      displayMode: false, 
-                    })*/
                     katex.render(content, span, {
                       throwOnError: false,
                       displayMode: false,
@@ -192,7 +186,6 @@ function inlineMarkdownPlugin() {
                   } catch (e) {
                     span.textContent = content
                   }
-
                   return span
                 }
               })(),

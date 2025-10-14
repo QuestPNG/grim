@@ -5,11 +5,15 @@ import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ArticleIcon from '@mui/icons-material/Article';
 import { useEffect, useState } from "react";
-import { readDir, BaseDirectory, DirEntry } from "@tauri-apps/plugin-fs";
-import { homeDir, configDir } from '@tauri-apps/api/path';
+import { readFile, readDir, BaseDirectory, DirEntry } from "@tauri-apps/plugin-fs";
+import { homeDir } from '@tauri-apps/api/path';
+import { useTreeViewApiRef } from "@mui/x-tree-view/hooks";
 interface FileTreeProps {
+  viewRef: React.RefObject<any>;
   theme: Theme;
   onFileSelect?: (fileId: string, fileName: string) => void;
+  treeRef?: React.RefObject<any>;
+  treeItems: TreeViewBaseItem[];
 }
 
 /*
@@ -72,25 +76,36 @@ export const convertTauriToTreeViewItemsRecursive = async (
   return items;
 };
 
-export function FileTree({ theme, onFileSelect }: FileTreeProps) {
+export function FileTree({ viewRef, theme, onFileSelect, treeRef, treeItems }: FileTreeProps) {
   const [treeData, setTreeData] = useState<TreeViewBaseItem[]>([]);
 
-  useEffect(() => {
+  const [isFocused, setIsFocused] = useState(false);
+
+
+  const handleFocus = () => {
+    console.log("TreeView focused");
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    console.log("TreeView unfocused");
+    setIsFocused(false);
+  };
+  /*useEffect(() => {
     const fetchFiles = async () => {
       try {
         const homeDirPath = await homeDir();
         console.log("Home directory path:", homeDirPath);
-        const configDirPath = await configDir();
         const dir = await readDir('grim/notes', { baseDir: BaseDirectory.Config });
         console.log("Directory 'notes' exists:", dir);
-        const treeItems = await convertTauriToTreeViewItemsRecursive(dir, 'grim/notes', BaseDirectory.Home);
+        const treeItems = await convertTauriToTreeViewItemsRecursive(dir, 'grim/notes', BaseDirectory.Config);
         setTreeData(treeItems);
       } catch (error) {
         console.error("Error checking directory existence:", error);
       }
     };
     fetchFiles();
-  }, [setTreeData]);
+  }, [setTreeData]);*/
   const fileTreeItems: TreeViewBaseItem[] = [
     {
       id: 'notes',
@@ -132,9 +147,10 @@ export function FileTree({ theme, onFileSelect }: FileTreeProps) {
     itemId: string,
     isSelected: boolean,
   ) => {
+    console.log(`Item ${itemId} selection toggled. Selected: ${isSelected}`);
     if (isSelected && onFileSelect) {
       //const item = findItemById(fileTreeItems, itemId);
-      const item = findItemById(treeData.length > 0 ? treeData : fileTreeItems, itemId);
+      const item = findItemById(treeItems.length > 0 ? treeItems : fileTreeItems, itemId);
       if (item && item.label.endsWith('.md')) {
         onFileSelect(itemId, item.label);
       }
@@ -158,8 +174,17 @@ export function FileTree({ theme, onFileSelect }: FileTreeProps) {
         Notes
       </Typography>
       <RichTreeView
-        items={treeData.length > 0 ? treeData : fileTreeItems}
+        onItemFocus={handleFocus}
+        onBlur={handleBlur}
+        ref={viewRef}
+        apiRef={treeRef}
+        //items={treeData.length > 0 ? treeData : fileTreeItems}
+        items={treeItems.length > 0 ? treeItems : fileTreeItems}
         onItemSelectionToggle={handleItemSelectionToggle}
+        onItemClick={(event, itemId) => {
+          console.log(`Item ${itemId} clicked.`);
+          console.log("Event: ", event);
+        }}
         slots={{
           collapseIcon: FolderOpenIcon,
           expandIcon: FolderIcon,

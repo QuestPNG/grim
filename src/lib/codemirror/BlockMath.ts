@@ -1,34 +1,6 @@
 import { EditorState, RangeSetBuilder, StateField } from "@codemirror/state";
-import { Decoration, DecorationSet, EditorView, GutterMarker, gutterLineClass, WidgetType, gutter } from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
 import katex from "katex";
-
-class BlockMathWidget extends WidgetType {
-  constructor(readonly content: string) {
-    super()
-  }
-  toDOM() {
-    const div = document.createElement("div")
-    div.className = "cm-block-math"
-    try {
-      katex.render(this.content, div, {
-        throwOnError: false,
-        displayMode: true,
-      })
-    } catch (e) {
-      div.textContent = this.content
-    }
-
-    return div
-  }
-}
-
-class EmptyMarker extends GutterMarker {
-  toDOM() {
-    return document.createTextNode("")
-  }
-}
-
-const emptyMarker = new EmptyMarker()
 
 export const blockMathField = StateField.define<DecorationSet>({
   create(state) {
@@ -55,7 +27,6 @@ function buildBlockMathDecos(state: EditorState): DecorationSet {
     const start = match.index
     const end = start + match[0].length
 
-
     let inSelection = false
     for (let range of state.selection.ranges) {
       if (range.from <= end && range.to >= start) {
@@ -70,52 +41,63 @@ function buildBlockMathDecos(state: EditorState): DecorationSet {
       }
     }
 
-    if (inSelection) continue
+    if (inSelection) {
+      // When in selection, add the math content after the plain text without replacing it
+      const deco = Decoration.widget({
+        widget: new (class extends WidgetType {
+          toDOM() {
+            const div = document.createElement("div")
+            /*div.style.display = "block"
+            div.style.textAlign = "center"
+            div.style.margin = "1em 0"
+            //div.style.border = "1px solid #ccc"
+            div.style.borderRadius = "4px"
+            div.style.padding = "0.5em"*/
+            //div.style.backgroundColor = "#f9f9f9"
+            
+            try {
+              katex.render(content, div, {
+                throwOnError: false,
+                displayMode: true,
+              })
+            } catch (e) {
+              div.textContent = content
+            }
 
-    const startLine = state.doc.lineAt(start)
-    const endLine = state.doc.lineAt(end)
-
-    const deco = Decoration.widget({
-      block: true,
-      side: -1,
-      widget: new (class extends WidgetType {
-        toDOM() {
-          const div = document.createElement("div")
-
-          try {
-            katex.render(content, div, {
-              throwOnError: false,
-              displayMode: true,
-            })
-          } catch (e) {
-            div.textContent = content
+            return div
           }
+        })(),
+        side: 1, // Add after the content
+      })
 
-          return div
-        }
-      })(),
-    })
+      builder.add(end, end, deco)
+    } else {
+      // Use Decoration.replace to completely replace the $$...$$ text with the widget
+      const deco = Decoration.replace({
+        widget: new (class extends WidgetType {
+          toDOM() {
+            const div = document.createElement("div")
+            div.style.display = "block"
+            div.style.textAlign = "center"
+            div.style.margin = "1em 0"
+            
+            try {
+              katex.render(content, div, {
+                throwOnError: false,
+                displayMode: true,
+              })
+            } catch (e) {
+              div.textContent = content
+            }
 
-    builder.add(start, start, deco)
-    //builder.add(start, end, Decoration.replace({ side: 1 }))
+            return div
+          }
+        })(),
+      })
 
-    const hiddenLine = Decoration.mark({
-      attributes: {
-        style: `
-color: transparent;       /* hide text */
-text-shadow: none;        /* prevent ghosting */
-user-select: none;        /* prevent selection */
-`
-      }
-    })
-
-    for (let lineNo = startLine.number; lineNo <= endLine.number; lineNo++) {
-      const line = state.doc.line(lineNo)
-      builder.add(line.from, line.to, hiddenLine)
+      builder.add(start, end, deco)
     }
-    //builder.add(closeStart,end, Decoration.replace({}))
   }
-
 
   return builder.finish()
 }
