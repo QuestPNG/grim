@@ -28,10 +28,10 @@ export function Editor(props: EditorProps) {
 //$\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`)
 
   const onChange = useCallback((val: string, _: ViewUpdate) => {
-    if (props.view !== null) {
+    /*if (props.view !== null) {
       let childeMode = props.mode
       console.log("Child mode:", childeMode);
-    }
+    }*/
     props.setValue(val)
     props.view?.requestMeasure()
   }, [props.view, props.mode]);

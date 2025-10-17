@@ -182,6 +182,7 @@ function inlineMarkdownPlugin() {
                     katex.render(content, span, {
                       throwOnError: false,
                       displayMode: false,
+                      strict:false,
                     })
                   } catch (e) {
                     span.textContent = content

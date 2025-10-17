@@ -15,6 +15,31 @@ function App() {
   // Allow FileTree and Editor to set focus state when clicked
   
 
+  const [config, setConfig] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const raw = await readFile("grim/config.json", { baseDir: BaseDirectory.Config });
+        const decoder = new TextDecoder("utf-8");
+        const content = decoder.decode(raw);
+        const obj = JSON.parse(content);
+        setConfig(obj);
+        console.log("Config loaded:", content);
+
+        const defaultFile = obj.defaultFile;
+        const rawFile = await readFile(defaultFile, { baseDir: BaseDirectory.Config });
+        const fileContent = decoder.decode(rawFile);
+        console.log("Default file content:", fileContent);
+        setValue(fileContent);
+      } catch (error) {
+        console.log("Error reading config file:", error);
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
   // Component Refs
   //const editorRef = useRef<any>(null);
   const editorRef = useRef<any>(null);
@@ -26,8 +51,7 @@ function App() {
   const [flavor] = useState("frappe");
   const [open, setOpen] = useState(false);
 
-  const [value, setValue] = useState<string>(`console.log('hello world!')
-$\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`);
+  const [value, setValue] = useState<string>("");
 
   const LEADER_TIMEOUT = 700;
   const [leaderActive, setLeaderActive] = useState(false);
@@ -43,6 +67,20 @@ $\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`);
       timeoutRef.current = null;
     }
   }, []);
+
+  const leaderActiveRef = useRef(leaderActive);
+  const sequenceRef = useRef(sequence);
+  const editorViewRef = useRef(editorView);
+  const editorModeRef = useRef(editorMode);
+
+
+  useEffect(() => {
+    leaderActiveRef.current = leaderActive;
+    sequenceRef.current = sequence;
+    editorViewRef.current = editorView;
+    editorModeRef.current = editorMode;
+  }, [leaderActive, sequence, editorView, editorMode]);
+
   const startTimeout = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -53,6 +91,7 @@ $\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`);
       resetLeader();
     }, LEADER_TIMEOUT);
   }, []);
+
 
   const [treeItems, setTreeItems] = useState<TreeViewBaseItem[]>([]);
 
@@ -86,50 +125,7 @@ $\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`);
     fetchFiles();
   }, [])
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const editorElement = editorView?.dom;
-      const isEditorFocused = editorElement?.contains(document.activeElement);
-
-      //if (!isEditorFocused && !leaderActive) return;
-
-      if (editorMode === "normal" || !isEditorFocused) {
-        if (!leaderActive && e.code === "Space") {
-          console.log("Leader key pressed");
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          setLeaderActive(true);
-          setSequence([]);
-          startTimeout();
-          return;
-        }
-
-        if (leaderActive) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-
-          if (e.code === "Escape") {
-            setLeaderActive(false);
-            setSequence([]);
-            return
-          }
-
-          const newSequence = [...sequence, e.key];
-          setSequence(newSequence);
-
-          startTimeout();
-          const seqStr = newSequence.join("");
-          console.log("Current sequence:", seqStr);
-          handleSequence(newSequence);
-        }
-      }
-    }
-    
-    document.addEventListener('keydown', handler, { capture: true });
-    return () => document.removeEventListener('keydown', handler, { capture: true });
-  }, [leaderActive, sequence, editorView, editorMode, startTimeout, value]);
-
-  const handleSequence = (seq: string[]) => {
+  const handleSequence = useCallback((seq: string[]) => {
     const seqStr = seq.join("");
 
     switch (seqStr) {
@@ -157,7 +153,66 @@ $\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`);
         resetLeader();
         break
     }
-  }
+
+  }, [open, treeRef, treeItems, resetLeader, editorView, value]);
+
+
+
+  const startTimeoutRef = useRef(startTimeout);
+  const handleSequenceRef = useRef(handleSequence);
+
+  useEffect(() => {
+    startTimeoutRef.current = startTimeout;
+    handleSequenceRef.current = handleSequence;
+  })
+
+  const handler = useCallback((e: KeyboardEvent) => {
+    const editorElement = editorViewRef.current?.dom;
+    const isEditorFocused = editorElement?.contains(document.activeElement);
+
+    if (editorModeRef.current === "normal" || isEditorFocused === false) {
+      if (!leaderActiveRef.current && e.code === "Space") {
+        console.log("Editor focused:", isEditorFocused);
+        console.log("Editor mode:", editorModeRef.current);
+        console.log("Leader key pressed.");
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setLeaderActive(true);
+        setSequence([]);
+        startTimeoutRef.current();
+        return;
+      }
+
+      if (leaderActiveRef.current) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        if (e.code === "Escape") {
+          setLeaderActive(false);
+          setSequence([]);
+          return
+        }
+
+        const newSequence = [...sequenceRef.current, e.key];
+        setSequence(newSequence);
+
+        startTimeoutRef.current();
+        const seqStr = newSequence.join("");
+        console.log("Current sequence:", seqStr);
+        handleSequenceRef.current(newSequence);
+      }
+    } else {
+      //console.log("Editor mode: ", editorModeRef.current, " - Ignoring ke);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handler, { capture: true });
+    return () => {
+      console.log("Removing keydown listener");
+      document.removeEventListener('keydown', handler, { capture: true });
+    }
+  }, [handler])
 
   return (
     <ThemeProvider theme={theme}>
