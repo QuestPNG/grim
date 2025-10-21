@@ -1,5 +1,5 @@
 import { catppuccinFrappe, catppuccinLatte, catppuccinMacchiato, catppuccinMocha } from "@catppuccin/codemirror";
-import CodeMirror, { EditorView, ViewUpdate, EditorState } from "@uiw/react-codemirror";
+import CodeMirror, { EditorView, ViewUpdate, EditorState, Prec } from "@uiw/react-codemirror";
 import { useCallback, useState } from "react";
 import { getCatppuccinTheme } from "../ui/theme/theme";
 import { flavors } from "@catppuccin/palette";
@@ -63,6 +63,7 @@ export function Editor(props: EditorProps) {
     setEditorState(state);
   }, [props.setMode, props.flavor, props.setView, setTheme, setColors, getCatppuccinTheme,
     catppuccinFrappe, catppuccinLatte, catppuccinMacchiato, catppuccinMocha]);
+  // NOTE: likely need more permanent fix to prevent codemirror keymaps from clashing with vim plugin keymaps
   return (
     <Box>
     <CodeMirror
@@ -72,10 +73,9 @@ export function Editor(props: EditorProps) {
         onChange={onChange}
         extensions={[
           theme,
-          vim(),
+          Prec.high(vim()),
           inlinePreview(),
           blockMathField,
-          
         ]}
     />
     </Box>
