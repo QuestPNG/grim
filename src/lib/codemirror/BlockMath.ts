@@ -43,19 +43,12 @@ function buildBlockMathDecos(state: EditorState): DecorationSet {
 
     if (inSelection) {
       // When in selection, add the math content after the plain text without replacing it
-      /*const deco = Decoration.widget({
+      const deco = Decoration.widget({
         widget: new (class extends WidgetType {
           toDOM() {
             const div = document.createElement("div")
-            /*div.style.display = "block"
-            div.style.textAlign = "center"
-            div.style.margin = "1em 0"
-            //div.style.border = "1px solid #ccc"
-            div.style.borderRadius = "4px"
-            div.style.padding = "0.5em"*/
-            //div.style.backgroundColor = "#f9f9f9"
             
-            /*try {
+            try {
               katex.render(content, div, {
                 throwOnError: false,
                 displayMode: true,
@@ -71,7 +64,7 @@ function buildBlockMathDecos(state: EditorState): DecorationSet {
         side: 1, // Add after the content
       })
 
-      builder.add(end, end, deco)*/
+      builder.add(end, end, deco)
     } else {
       // Use Decoration.replace to completely replace the $$...$$ text with the widget
       const deco = Decoration.replace({

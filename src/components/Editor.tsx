@@ -1,12 +1,12 @@
 import { catppuccinFrappe, catppuccinLatte, catppuccinMacchiato, catppuccinMocha } from "@catppuccin/codemirror";
 import CodeMirror, { EditorView, ViewUpdate, EditorState } from "@uiw/react-codemirror";
 import { useCallback, useState } from "react";
-import { getCatppuccinTheme } from "../theme/theme";
+import { getCatppuccinTheme } from "../ui/theme/theme";
 import { flavors } from "@catppuccin/palette";
 import { Box } from "@mui/material";
 import { getCM, vim } from "@replit/codemirror-vim";
-import { inlinePreview } from "../../lib/codemirror/InlinePreview";
-import { blockMathField } from "../../lib/codemirror/BlockMath";
+import { inlinePreview } from "../lib/codemirror/InlinePreview";
+import { blockMathField } from "../lib/codemirror/BlockMath";
 
 interface EditorProps {
   editorRef: React.RefObject<any>

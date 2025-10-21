@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { getCatppuccinTheme } from "./ui/theme/theme";
 import { Box, CssBaseline, Drawer, ThemeProvider } from "@mui/material";
-import { Editor } from "./ui/components/Editor";
+import { Editor } from "./components/Editor";
 import { EditorView } from "@uiw/react-codemirror";
 import Button from "@mui/material/Button";
-import { convertTauriToTreeViewItemsRecursive, FileTree } from "./ui/components/FileTree";
+import { convertTauriToTreeViewItemsRecursive, FileTree } from "./components/FileTree";
 import { TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
 import { BaseDirectory, readDir, readFile } from "@tauri-apps/plugin-fs";
 
