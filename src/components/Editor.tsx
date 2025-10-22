@@ -19,6 +19,7 @@ interface EditorProps {
   setMode: (newMode: string) => void
 };
 
+// TODO: Memoize onChange callback
 export function Editor(props: EditorProps) {
 
   const [colors, setColors] = useState(getCatppuccinTheme("frappe"));
@@ -28,6 +29,7 @@ export function Editor(props: EditorProps) {
 //$\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`)
 
   const onChange = useCallback((val: string, _: ViewUpdate) => {
+    console.log("Callback registered");
     /*if (props.view !== null) {
       let childeMode = props.mode
       console.log("Child mode:", childeMode);
