@@ -1,8 +1,6 @@
 import { catppuccinFrappe, catppuccinLatte, catppuccinMacchiato, catppuccinMocha } from "@catppuccin/codemirror";
 import CodeMirror, { EditorView, ViewUpdate, EditorState, Prec } from "@uiw/react-codemirror";
-import { useCallback, useState } from "react";
-import { getCatppuccinTheme } from "../ui/theme/theme";
-import { flavors } from "@catppuccin/palette";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
 import { getCM, vim } from "@replit/codemirror-vim";
 import { inlinePreview } from "../lib/codemirror/InlinePreview";
@@ -22,32 +20,43 @@ interface EditorProps {
 // TODO: Memoize onChange callback
 export function Editor(props: EditorProps) {
 
-  const [colors, setColors] = useState(getCatppuccinTheme("frappe"));
   const [theme, setTheme] = useState(catppuccinFrappe);
-  const [editorState, setEditorState] = useState<EditorState | null>(null);
   //const [value, setValue] = useState<string>(`console.log('hello world!')
 //$\\frac{2}{3}\\ket{0} + \\frac{1-2i}{3}\\ket{1}$`)
 
+  const viewRef = useRef(props.view)
+  const modeRef = useRef(props.mode)
+  const setModeRef = useRef(props.setMode)
+  const setViewRef = useRef(props.setView)
+  const flavorRef = useRef(props.flavor)
+
+  useEffect(() => {
+    viewRef.current = props.view
+    modeRef.current = props.mode
+    setModeRef.current = props.setMode
+    setViewRef.current = props.setView
+    flavorRef.current = props.flavor
+  }, [props.view, props.mode, props.setMode, props.setView, props.flavor]);
+
   const onChange = useCallback((val: string, _: ViewUpdate) => {
-    console.log("Callback registered");
     /*if (props.view !== null) {
       let childeMode = props.mode
       console.log("Child mode:", childeMode);
     }*/
     props.setValue(val)
-    props.view?.requestMeasure()
-  }, [props.view, props.mode]);
+    //props.view?.requestMeasure()
+    viewRef.current?.requestMeasure()
+  }, [props.setValue]);
 
-  const handleCreateEditor = useCallback((view: EditorView, state: EditorState) => {
+  const handleCreateEditor = useCallback((view: EditorView, _: EditorState) => {
 
     let cm = getCM(view);
     cm?.on("vim-mode-change", (modeObj: any) => {
-      props.setMode(modeObj.mode);
+      setModeRef.current(modeObj.mode);
       console.log("Vim mode changed to:", modeObj.mode);
     });
 
-    setColors(getCatppuccinTheme(props.flavor))
-    switch (props.flavor) {
+    switch (flavorRef.current) {
       case "frappe":
         setTheme(catppuccinFrappe);
         break;
@@ -61,10 +70,8 @@ export function Editor(props: EditorProps) {
         setTheme(catppuccinLatte);
         break;
     }
-    props.setView(view);
-    setEditorState(state);
-  }, [props.setMode, props.flavor, props.setView, setTheme, setColors, getCatppuccinTheme,
-    catppuccinFrappe, catppuccinLatte, catppuccinMacchiato, catppuccinMocha]);
+    setViewRef.current(view);
+  }, []);
   // NOTE: likely need more permanent fix to prevent codemirror keymaps from clashing with vim plugin keymaps
   return (
     <Box>

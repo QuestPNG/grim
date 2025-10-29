@@ -8,6 +8,7 @@ import Button from "@mui/material/Button";
 import { convertTauriToTreeViewItemsRecursive, FileTree } from "./components/FileTree";
 import { TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
 import { BaseDirectory, readDir, readFile } from "@tauri-apps/plugin-fs";
+import { Vim, getCM } from "@replit/codemirror-vim";
 
 function App() {
 
@@ -53,6 +54,8 @@ function App() {
 
   const [value, setValue] = useState<string>("");
 
+  const valueRef = useRef(value);
+
   const LEADER_TIMEOUT = 700;
   const [leaderActive, setLeaderActive] = useState(false);
   const [sequence, setSequence] = useState<string[]>([]);
@@ -79,7 +82,9 @@ function App() {
     sequenceRef.current = sequence;
     editorViewRef.current = editorView;
     editorModeRef.current = editorMode;
-  }, [leaderActive, sequence, editorView, editorMode]);
+
+    valueRef.current = value;
+  }, [leaderActive, sequence, editorView, editorMode, value]);
 
   const startTimeout = useCallback(() => {
     if (timeoutRef.current) {
@@ -206,6 +211,13 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    Vim.defineEx('write', 'w', () => {
+      console.log("Vim write command triggered");
+      console.log("Current file contents:", valueRef.current);
+      // Implement file saving logic here
+    });
+  }, [])
   useEffect(() => {
     document.addEventListener('keydown', handler, { capture: true });
     return () => {
