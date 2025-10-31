@@ -7,7 +7,7 @@ import { EditorView } from "@uiw/react-codemirror";
 import Button from "@mui/material/Button";
 import { convertTauriToTreeViewItemsRecursive, FileTree } from "./components/FileTree";
 import { TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
-import { BaseDirectory, readDir, readFile } from "@tauri-apps/plugin-fs";
+import { BaseDirectory, readDir, readFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { Vim, getCM } from "@replit/codemirror-vim";
 
 function App() {
@@ -17,6 +17,10 @@ function App() {
   
 
   const [config, setConfig] = useState<any | null>(null);
+
+  const [currentFile, setCurrentFile] = useState<string | null>(null);
+
+  const currentFileRef = useRef(currentFile);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -33,6 +37,7 @@ function App() {
         const fileContent = decoder.decode(rawFile);
         console.log("Default file content:", fileContent);
         setValue(fileContent);
+        setCurrentFile(defaultFile);
       } catch (error) {
         console.log("Error reading config file:", error);
       }
@@ -84,6 +89,7 @@ function App() {
     editorModeRef.current = editorMode;
 
     valueRef.current = value;
+    currentFileRef.current = currentFile;
   }, [leaderActive, sequence, editorView, editorMode, value]);
 
   const startTimeout = useCallback(() => {
@@ -111,6 +117,7 @@ function App() {
     const decoder = new TextDecoder("utf-8");
     const content = decoder.decode(raw);
     setValue(content);
+    setCurrentFile(fileId);
   };
 
   useEffect(() => {
@@ -215,9 +222,13 @@ function App() {
     Vim.defineEx('write', 'w', () => {
       console.log("Vim write command triggered");
       console.log("Current file contents:", valueRef.current);
+      console.log("Current file:", currentFileRef.current);
       // Implement file saving logic here
+      writeTextFile(currentFileRef.current || "untitled.txt", valueRef.current || "", { baseDir: BaseDirectory.Config }).catch(err => {
+        console.error("Error writing file:", err);
+      });
     });
-  }, [])
+  }, []);
   useEffect(() => {
     document.addEventListener('keydown', handler, { capture: true });
     return () => {

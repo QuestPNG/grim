@@ -9,6 +9,10 @@
     "core:default",
     "opener:default",
     "fs:default",
+    "fs:allow-app-write",
+    "fs:allow-appcache-write",
+    "fs:allow-appcache-write-recursive",
+    "fs:allow-appconfig-write",
     {
       "identifier": "fs:scope",
       "allow": [{ "path": "$HOME/**" }, {"path": "$CONFIG/grim/**"}]
