@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { getCatppuccinTheme } from "./ui/theme/theme";
-import { Box, CssBaseline, Drawer, ThemeProvider } from "@mui/material";
+import { Box, CssBaseline, Drawer, IconButton, ThemeProvider } from "@mui/material";
 import { Editor } from "./components/Editor";
 import { EditorView } from "@uiw/react-codemirror";
-import Button from "@mui/material/Button";
 import { convertTauriToTreeViewItemsRecursive, FileTree } from "./components/FileTree";
 import { TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
 import { BaseDirectory, readDir, readFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { Vim, getCM } from "@replit/codemirror-vim";
+import { Vim } from "@replit/codemirror-vim";
+import MenuIcon from '@mui/icons-material/Menu';
 
 function App() {
 
@@ -16,7 +16,7 @@ function App() {
   // Allow FileTree and Editor to set focus state when clicked
   
 
-  const [config, setConfig] = useState<any | null>(null);
+  const [_, setConfig] = useState<any | null>(null);
 
   const [currentFile, setCurrentFile] = useState<string | null>(null);
 
@@ -109,6 +109,8 @@ function App() {
   const theme = getCatppuccinTheme(flavor);
 
   const drawerWidth = 240;
+
+  const sidebarWidth = 40;
 
 
   const handleFileSelect =  async (fileId: string, fileName: string) => {
@@ -240,27 +242,63 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex' }}>
-        <Drawer
-          variant="persistent"
-          open={open}
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
-              width: drawerWidth,
-              boxSizing: 'border-box',
-            },
+      <Box sx={{ display: 'block' }}>
+        <div
+          style={{ 
+            display: 'flex',
+            flexDirection: 'row',
           }}
         >
-          <FileTree 
-            viewRef={treeViewRef}
-            theme={theme}
-            onFileSelect={handleFileSelect}
-            treeRef={treeRef}
-            treeItems={treeItems}
-          />
-        </Drawer>
+
+          <div
+            style={{
+              width: sidebarWidth,
+              //marginLeft: open ? 0 : `-${drawerWidth}px`,
+              backgroundColor: theme.palette.background.paper,
+              height: '100vh',
+              border: 'none',
+            }}
+          >
+            <IconButton 
+              onClick={() => setOpen(!open)} 
+              sx = {{ 
+                color: theme.palette.text.primary,
+                borderRadius: '25%'
+              }}
+            >
+              <MenuIcon />
+            </IconButton>
+          </div>
+          <Drawer
+            variant="persistent"
+            open={open}
+            sx={{
+              width: open ? drawerWidth : 0,
+              leftMargin: sidebarWidth,
+              flexShrink: 0,
+              '& .MuiDrawer-paper': {
+                width: drawerWidth,
+                boxSizing: 'border-box',
+                left: sidebarWidth,
+                transition: (theme) => 
+                  theme.transitions.create('width', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.enteringScreen,
+                  }),
+              },
+              border: "none"
+
+            }}
+          >
+            <FileTree 
+              viewRef={treeViewRef}
+              theme={theme}
+              onFileSelect={handleFileSelect}
+              treeRef={treeRef}
+              treeItems={treeItems}
+            />
+          </Drawer>
+
         <Box
           component="main"
           sx={{
@@ -269,13 +307,13 @@ function App() {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.leavingScreen,
             }),
-            marginLeft: open ? 0 : `-${drawerWidth}px`,
+            //marginLeft: open ? 0 : `${sidebarWidth}px`,
+            marginLeft: 0,
             ".cm-editor": {
               backgroundColor: theme.palette.background.paper,
             }
           }}
         >
-          <Button onClick={() => setOpen(!open)}>Open</Button>
           <Editor 
             editorRef={editorRef}
             flavor={flavor}
@@ -287,6 +325,7 @@ function App() {
             setValue={setValue}
           />
         </Box>
+        </div>
       </Box>
     </ThemeProvider>
   );

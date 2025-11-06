@@ -4,10 +4,8 @@ import { TreeViewBaseItem } from '@mui/x-tree-view/models';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ArticleIcon from '@mui/icons-material/Article';
-import { useEffect, useState } from "react";
-import { readFile, readDir, BaseDirectory, DirEntry } from "@tauri-apps/plugin-fs";
-import { homeDir } from '@tauri-apps/api/path';
-import { useTreeViewApiRef } from "@mui/x-tree-view/hooks";
+import { useState } from "react";
+import { readDir, BaseDirectory, DirEntry } from "@tauri-apps/plugin-fs";
 interface FileTreeProps {
   viewRef: React.RefObject<any>;
   theme: Theme;
@@ -77,9 +75,8 @@ export const convertTauriToTreeViewItemsRecursive = async (
 };
 
 export function FileTree({ viewRef, theme, onFileSelect, treeRef, treeItems }: FileTreeProps) {
-  const [treeData, setTreeData] = useState<TreeViewBaseItem[]>([]);
 
-  const [isFocused, setIsFocused] = useState(false);
+  const [_, setIsFocused] = useState(false);
 
 
   const handleFocus = () => {
@@ -205,3 +202,4 @@ export function FileTree({ viewRef, theme, onFileSelect, treeRef, treeItems }: F
     </Box>
   );
 }
+

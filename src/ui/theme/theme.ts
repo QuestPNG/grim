@@ -1,8 +1,6 @@
 import { createTheme, Theme } from "@mui/material/styles";
 import { CatppuccinFlavor, flavors } from "@catppuccin/palette";
 
-const frappe = flavors.frappe
-
 export function getCatppuccinTheme(flavor: string): Theme  {
     let theme: CatppuccinFlavor;
     switch (flavor) {

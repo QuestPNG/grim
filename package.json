@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "NO_STRIP=true tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "grim": "tauri dev"
@@ -16,7 +16,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.6",
-    "@mui/icons-material": "^7.3.2",
+    "@mui/icons-material": "^7.3.5",
     "@mui/material": "^7.3.2",
     "@mui/x-tree-view": "^8.11.3",
     "@replit/codemirror-vim": "^6.3.0",
