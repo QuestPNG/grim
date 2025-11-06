@@ -4,6 +4,7 @@ import { getCatppuccinTheme } from "./ui/theme/theme";
 import { Box, Collapse, CssBaseline, IconButton, ThemeProvider } from "@mui/material";
 import { Editor } from "./components/Editor";
 import { Toolbar } from "./components/Toolbar";
+import { ThemeColorDisplay } from "./components/ThemeColorDisplay";
 import { EditorView } from "@uiw/react-codemirror";
 import { convertTauriToTreeViewItemsRecursive, FileTree } from "./components/FileTree";
 import { TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
@@ -57,6 +58,7 @@ function App() {
   const [editorMode, setEditorMode] = useState<string>("normal");
   const [flavor] = useState("frappe");
   const [open, setOpen] = useState(false);
+  const [showColorDisplay, setShowColorDisplay] = useState(false);
 
   const [value, setValue] = useState<string>("");
 
@@ -167,9 +169,13 @@ function App() {
         setOpen(!open);
         resetLeader();
         break
+      case "tc":
+        setShowColorDisplay(!showColorDisplay);
+        resetLeader();
+        break
     }
 
-  }, [open, treeRef, treeItems, resetLeader, editorView, value]);
+  }, [open, treeRef, treeItems, resetLeader, editorView, value, showColorDisplay]);
 
 
 
@@ -306,16 +312,20 @@ function App() {
             }
           }}
         >
-          <Editor 
-            editorRef={editorRef}
-            flavor={flavor}
-            view={editorView}
-            setView={setEditorView}
-            mode={editorMode}
-            setMode={setEditorMode}
-            value={value}
-            setValue={setValue}
-          />
+          {showColorDisplay ? (
+            <ThemeColorDisplay flavor={flavor} />
+          ) : (
+            <Editor 
+              editorRef={editorRef}
+              flavor={flavor}
+              view={editorView}
+              setView={setEditorView}
+              mode={editorMode}
+              setMode={setEditorMode}
+              value={value}
+              setValue={setValue}
+            />
+          )}
         </Box>
         </Box>
       </Box>

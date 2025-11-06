@@ -89,7 +89,7 @@ export function Toolbar({ title = 'grimoire' }: ToolbarProps) {
             height: barHeight,
             borderRadius: 0,
             color: theme.palette.text.primary,
-            background: theme.palette.background.default,
+            background: theme.custom.background.tertiary,
             '&:hover': {
               backgroundColor: theme.palette.action.hover,
             },
@@ -106,7 +106,8 @@ export function Toolbar({ title = 'grimoire' }: ToolbarProps) {
             height: barHeight,
             borderRadius: 0,
             color: theme.palette.text.primary,
-            background: theme.palette.background.default,
+            //background: theme.palette.background.default,
+            background: theme.custom.background.tertiary,
             '&:hover': {
               backgroundColor: theme.palette.action.hover,
             },
@@ -125,7 +126,8 @@ export function Toolbar({ title = 'grimoire' }: ToolbarProps) {
             color: theme.palette.text.primary,
             background: theme.palette.background.default,
             '&:hover': {
-              backgroundColor: '#ff5f56',
+              //backgroundColor: '#ff5f56',
+              backgroundColor: theme.palette.error.main,
               color: 'white',
             },
           }}

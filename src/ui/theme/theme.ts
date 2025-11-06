@@ -1,6 +1,31 @@
 import { createTheme, Theme } from "@mui/material/styles";
 import { CatppuccinFlavor, flavors } from "@catppuccin/palette";
 
+declare module  '@mui/material/styles' {
+    interface Theme {
+        status: {
+            danger: string;
+        };
+
+        custom: {
+            background: {
+                tertiary: string;
+            }
+        };
+    }
+    // allow configuration using `createTheme`
+    interface ThemeOptions {
+        status?: {
+            danger?: string;
+        };
+        custom?: {
+            background?: {
+                tertiary?: string;
+            }
+        };
+    }
+}
+
 export function getCatppuccinTheme(flavor: string): Theme  {
     let theme: CatppuccinFlavor;
     switch (flavor) {
@@ -21,6 +46,14 @@ export function getCatppuccinTheme(flavor: string): Theme  {
     }
 
     return createTheme({
+        status: {
+            danger: theme.colors.peach.hex,
+        },
+        custom: {
+            background: {
+                tertiary: theme.colors.crust.hex,
+            }
+        },
         palette: {
             primary: {
                 main: theme.colors.blue.hex,
@@ -35,6 +68,9 @@ export function getCatppuccinTheme(flavor: string): Theme  {
             },
             text: {
                 primary: theme.colors.text.hex,
+            },
+            error: {
+                main: theme.colors.red.hex,
             }
         }
     })
