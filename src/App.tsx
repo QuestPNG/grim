@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { getCatppuccinTheme } from "./ui/theme/theme";
-import { Box, CssBaseline, Drawer, IconButton, ThemeProvider } from "@mui/material";
+import { Box, Collapse, CssBaseline, Drawer, IconButton, ThemeProvider } from "@mui/material";
 import { Editor } from "./components/Editor";
 import { EditorView } from "@uiw/react-codemirror";
 import { convertTauriToTreeViewItemsRecursive, FileTree } from "./components/FileTree";
@@ -280,23 +280,20 @@ function App() {
                 width: drawerWidth,
                 boxSizing: 'border-box',
                 left: sidebarWidth,
-                transition: (theme) => 
-                  theme.transitions.create('width', {
-                    easing: theme.transitions.easing.sharp,
-                    duration: theme.transitions.duration.enteringScreen,
-                  }),
               },
               border: "none"
 
             }}
           >
-            <FileTree 
-              viewRef={treeViewRef}
-              theme={theme}
-              onFileSelect={handleFileSelect}
-              treeRef={treeRef}
-              treeItems={treeItems}
-            />
+            <Collapse in={open} orientation="horizontal">
+              <FileTree 
+                viewRef={treeViewRef}
+                theme={theme}
+                onFileSelect={handleFileSelect}
+                treeRef={treeRef}
+                treeItems={treeItems}
+              />
+            </Collapse>
           </Drawer>
 
         <Box
