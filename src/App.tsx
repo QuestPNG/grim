@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { getCatppuccinTheme } from "./ui/theme/theme";
-import { Box, Collapse, CssBaseline, Drawer, IconButton, ThemeProvider } from "@mui/material";
+import { Box, Collapse, CssBaseline, IconButton, ThemeProvider } from "@mui/material";
 import { Editor } from "./components/Editor";
+import { Toolbar } from "./components/Toolbar";
 import { EditorView } from "@uiw/react-codemirror";
 import { convertTauriToTreeViewItemsRecursive, FileTree } from "./components/FileTree";
 import { TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
@@ -242,20 +243,15 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'block' }}>
-        <div
-          style={{ 
-            display: 'flex',
-            flexDirection: 'row',
-          }}
-        >
-
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <Toolbar />
+        <Box sx={{ display: 'flex', flexGrow: 1 }}>
           <div
             style={{
               width: sidebarWidth,
               //marginLeft: open ? 0 : `-${drawerWidth}px`,
               backgroundColor: theme.palette.background.paper,
-              height: '100vh',
+              height: '100%',
               border: 'none',
             }}
           >
@@ -269,23 +265,22 @@ function App() {
               <MenuIcon />
             </IconButton>
           </div>
-          <Drawer
-            variant="persistent"
-            open={open}
+          <Collapse 
+            in={open} 
+            orientation="horizontal"
             sx={{
-              width: open ? drawerWidth : 0,
-              leftMargin: sidebarWidth,
-              flexShrink: 0,
-              '& .MuiDrawer-paper': {
-                width: drawerWidth,
-                boxSizing: 'border-box',
-                left: sidebarWidth,
-              },
-              border: "none"
-
             }}
           >
-            <Collapse in={open} orientation="horizontal">
+            <Box
+              sx={{
+                width: drawerWidth,
+                flexShrink: 0,
+                bgcolor: theme.palette.background.paper,
+                height: '100%',
+                borderRight: `1px solid ${theme.palette.divider}`,
+                overflow: 'auto',
+              }}
+            >
               <FileTree 
                 viewRef={treeViewRef}
                 theme={theme}
@@ -293,8 +288,8 @@ function App() {
                 treeRef={treeRef}
                 treeItems={treeItems}
               />
-            </Collapse>
-          </Drawer>
+            </Box>
+          </Collapse>
 
         <Box
           component="main"
@@ -322,7 +317,7 @@ function App() {
             setValue={setValue}
           />
         </Box>
-        </div>
+        </Box>
       </Box>
     </ThemeProvider>
   );

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "NO_STRIP=true tsc && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "grim": "tauri dev"
