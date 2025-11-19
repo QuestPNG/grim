@@ -20,7 +20,15 @@
     "fs:allow-appconfig-write",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "$HOME/**" }, {"path": "$CONFIG/grim/**"}]
-    }
+      "allow": [
+        {
+          "path": "$HOME/**"
+        },
+        {
+          "path": "$CONFIG/grim/**"
+        }
+      ]
+    },
+    "dialog:default"
   ]
 }

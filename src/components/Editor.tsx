@@ -74,7 +74,9 @@ export function Editor(props: EditorProps) {
   }, []);
   // NOTE: likely need more permanent fix to prevent codemirror keymaps from clashing with vim plugin keymaps
   return (
-    <Box>
+    <Box
+      minWidth="0"
+    >
     <CodeMirror
         ref={props.editorRef}
         onCreateEditor={handleCreateEditor}
@@ -85,6 +87,7 @@ export function Editor(props: EditorProps) {
           Prec.high(vim()),
           inlinePreview(),
           blockMathField,
+          EditorState.tabSize.of(2),
         ]}
     />
     </Box>

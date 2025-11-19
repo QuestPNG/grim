@@ -155,6 +155,54 @@ function inlineMarkdownPlugin() {
           }
 
 
+          // --- Ordered Lists ---
+          const orderedListRegex = /^(\d+)\.\s+(.*)$/gm
+          let orderedMatch
+          while ((orderedMatch = orderedListRegex.exec(text)) !== null) {
+            const number = orderedMatch[1]
+            const content = orderedMatch[2]
+            const start = from + orderedMatch.index
+            const end = start + orderedMatch[0].length
+
+            // Skip if cursor is on this line
+            /*
+            let inSelection = false
+            for (let range of view.state.selection.ranges) {
+              if (range.from <= end && range.to >= start) {
+                inSelection = true
+                break
+              }
+            }
+            if (inSelection) continue
+          */
+
+            const deco = Decoration.replace({
+              widget: new (class extends WidgetType {
+                toDOM() {
+                  const span = document.createElement("span")
+                  span.style.display = "inline-flex"
+                  span.style.alignItems = "center"
+
+                  const numberSpan = document.createElement("span")
+                  numberSpan.textContent = `\t${number}.`
+                  numberSpan.style.marginRight = "0.5em"
+                  //numberSpan.style.color = "#888" // optional, like Markdown previewers
+                  //numberSpan.style.background = "#f00"
+
+                  const textSpan = document.createElement("span")
+                  textSpan.textContent = content
+
+                  span.appendChild(numberSpan)
+                  span.appendChild(textSpan)
+                  return span
+                }
+              })(),
+            })
+
+            decorations.push({ from: start, to: end, deco })
+          }
+
+
           // KaTeX
           // Inline
           const mathRegex = /\$([^\n]+?)\$/g

@@ -11,6 +11,7 @@ import { TreeViewBaseItem, useTreeViewApiRef } from "@mui/x-tree-view";
 import { BaseDirectory, readDir, readFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { Vim } from "@replit/codemirror-vim";
 import MenuIcon from '@mui/icons-material/Menu';
+import { ensureConfigExists, saveConfig, getNotesDirectory, type AppConfig } from "./lib/config";
 
 function App() {
 
@@ -18,7 +19,7 @@ function App() {
   // Allow FileTree and Editor to set focus state when clicked
   
 
-  const [_, setConfig] = useState<any | null>(null);
+  const [config, setConfig] = useState<AppConfig | null>(null);
 
   const [currentFile, setCurrentFile] = useState<string | null>(null);
 
@@ -27,16 +28,14 @@ function App() {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const raw = await readFile("grim/config.json", { baseDir: BaseDirectory.Config });
-        const decoder = new TextDecoder("utf-8");
-        const content = decoder.decode(raw);
-        const obj = JSON.parse(content);
-        setConfig(obj);
-        console.log("Config loaded:", content);
+        const appConfig = await ensureConfigExists();
+        setConfig(appConfig);
+        console.log("Config loaded:", appConfig);
 
-        const defaultFile = obj.defaultFile;
-        const rawFile = await readFile(defaultFile, { baseDir: BaseDirectory.Config });
-        const fileContent = decoder.decode(rawFile);
+        const defaultFile = appConfig.defaultFile;
+        const raw = await readFile(defaultFile, { baseDir: BaseDirectory.Config });
+        const decoder = new TextDecoder("utf-8");
+        const fileContent = decoder.decode(raw);
         console.log("Default file content:", fileContent);
         setValue(fileContent);
         setCurrentFile(defaultFile);
@@ -108,21 +107,38 @@ function App() {
 
 
   const [treeItems, setTreeItems] = useState<TreeViewBaseItem[]>([]);
+  const [currentDirectory, setCurrentDirectory] = useState<string | null>(null);
 
   const theme = getCatppuccinTheme(flavor);
 
-  const drawerWidth = 240;
+  const drawerWidth = 200;
 
   const sidebarWidth = 40;
 
 
   const handleFileSelect =  async (fileId: string, fileName: string) => {
     console.log("Selected file:", fileName, "with ID:", fileId);
-    const raw =  await readFile(fileId, { baseDir: BaseDirectory.Config })
-    const decoder = new TextDecoder("utf-8");
-    const content = decoder.decode(raw);
-    setValue(content);
-    setCurrentFile(fileId);
+    
+    try {
+      let fileContent: string;
+      
+      if (currentDirectory) {
+        // If we have a current directory, read file from there
+        const raw = await readFile(fileId);
+        const decoder = new TextDecoder("utf-8");
+        fileContent = decoder.decode(raw);
+      } else {
+        // Fallback to the original behavior for config directory
+        const raw = await readFile(fileId, { baseDir: BaseDirectory.Config });
+        const decoder = new TextDecoder("utf-8");
+        fileContent = decoder.decode(raw);
+      }
+      
+      setValue(fileContent);
+      setCurrentFile(fileId);
+    } catch (error) {
+      console.error("Error reading file:", error);
+    }
   };
 
   useEffect(() => {
@@ -130,8 +146,9 @@ function App() {
     const fetchFiles = async() => {
       console.log("Fetching files...");
       try {
-        const dir = await readDir("grim/notes", { baseDir: BaseDirectory.Config });
-        const treeItems = await convertTauriToTreeViewItemsRecursive(dir, "grim/notes", BaseDirectory.Config);
+        const notesDir = getNotesDirectory();
+        const dir = await readDir(notesDir, { baseDir: BaseDirectory.Config });
+        const treeItems = await convertTauriToTreeViewItemsRecursive(dir, notesDir, BaseDirectory.Config);
         console.log("Tree Items:", treeItems);
         setTreeItems(treeItems);
       } catch(error) {
@@ -141,6 +158,29 @@ function App() {
 
     fetchFiles();
   }, [])
+
+  const handleDirectorySelected = useCallback(async (directoryPath: string) => {
+    console.log("Loading directory:", directoryPath);
+    setCurrentDirectory(directoryPath);
+    
+    try {
+      // Read the selected directory contents
+      const dir = await readDir(directoryPath);
+      const newTreeItems = await convertTauriToTreeViewItemsRecursive(dir, directoryPath);
+      console.log("New tree items for directory", directoryPath, ":", newTreeItems);
+      setTreeItems(newTreeItems);
+      
+      // Save the last opened directory to config
+      if (config) {
+        const updatedConfig = { ...config, lastOpenedDirectory: directoryPath };
+        setConfig(updatedConfig);
+        await saveConfig(updatedConfig);
+      }
+    } catch (error) {
+      console.error("Error reading selected directory:", error);
+      // Optionally show an error message to the user
+    }
+  }, [config]);
 
   const handleSequence = useCallback((seq: string[]) => {
     const seqStr = seq.join("");
@@ -223,6 +263,12 @@ function App() {
         handleSequenceRef.current(newSequence);
       }
     } else {
+      if (e.code === "j") {
+        // Focus next item in the tree view
+      } if (e.code === "k") {
+        // Focus previous item in the tree view
+
+      }
       //console.log("Editor mode: ", editorModeRef.current, " - Ignoring ke);
     }
   }, []);
@@ -250,7 +296,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <Toolbar />
+        <Toolbar onDirectorySelected={handleDirectorySelected} />
         <Box sx={{ display: 'flex', flexGrow: 1 }}>
           <div
             style={{
@@ -264,8 +310,10 @@ function App() {
             <IconButton 
               onClick={() => setOpen(!open)} 
               sx = {{ 
+                backgroundColor: theme.palette.background.default,
                 color: theme.palette.text.primary,
-                borderRadius: '25%'
+                borderRadius: '0%',
+                boxShadow: 0,
               }}
             >
               <MenuIcon />
@@ -279,7 +327,7 @@ function App() {
           >
             <Box
               sx={{
-                width: drawerWidth,
+                minWidth: drawerWidth,
                 flexShrink: 0,
                 bgcolor: theme.palette.background.paper,
                 height: '100%',
@@ -300,33 +348,34 @@ function App() {
         <Box
           component="main"
           sx={{
-            flexGrow: 1,
-            transition: theme.transitions.create('margin', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.leavingScreen,
-            }),
-            //marginLeft: open ? 0 : `${sidebarWidth}px`,
-            marginLeft: 0,
-            ".cm-editor": {
-              backgroundColor: theme.palette.background.paper,
-            }
-          }}
-        >
-          {showColorDisplay ? (
-            <ThemeColorDisplay flavor={flavor} />
-          ) : (
-            <Editor 
-              editorRef={editorRef}
-              flavor={flavor}
-              view={editorView}
-              setView={setEditorView}
-              mode={editorMode}
-              setMode={setEditorMode}
-              value={value}
-              setValue={setValue}
-            />
-          )}
-        </Box>
+              flexGrow: 1,
+              minWidth: 0,
+              transition: theme.transitions.create('margin', {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.leavingScreen,
+              }),
+              //marginLeft: open ? 0 : `${sidebarWidth}px`,
+              marginLeft: 0,
+              ".cm-editor": {
+                backgroundColor: theme.palette.background.paper,
+              }
+            }}
+          >
+            {showColorDisplay ? (
+              <ThemeColorDisplay flavor={flavor} />
+            ) : (
+                <Editor 
+                  editorRef={editorRef}
+                  flavor={flavor}
+                  view={editorView}
+                  setView={setEditorView}
+                  mode={editorMode}
+                  setMode={setEditorMode}
+                  value={value}
+                  setValue={setValue}
+                />
+              )}
+          </Box>
         </Box>
       </Box>
     </ThemeProvider>
