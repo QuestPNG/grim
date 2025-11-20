@@ -141,6 +141,24 @@ function App() {
     }
   };
 
+  const handleFileCreated = useCallback(async (fileName: string, filePath: string) => {
+    console.log("File created:", fileName, "at path:", filePath);
+    
+    // Refresh the tree items to show the new file
+    try {
+      const notesDir = getNotesDirectory();
+      const dir = await readDir(notesDir, { baseDir: BaseDirectory.Config });
+      const newTreeItems = await convertTauriToTreeViewItemsRecursive(dir, notesDir, BaseDirectory.Config);
+      setTreeItems(newTreeItems);
+      
+      // Optionally, select the newly created file
+      setValue(''); // Start with empty content
+      setCurrentFile(filePath);
+    } catch (error) {
+      console.error("Error refreshing tree after file creation:", error);
+    }
+  }, []);
+
   useEffect(() => {
 
     const fetchFiles = async() => {
@@ -341,6 +359,8 @@ function App() {
                 onFileSelect={handleFileSelect}
                 treeRef={treeRef}
                 treeItems={treeItems}
+                currentDirectory={currentDirectory || getNotesDirectory()}
+                onFileCreated={handleFileCreated}
               />
             </Box>
           </Collapse>

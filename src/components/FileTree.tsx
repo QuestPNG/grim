@@ -1,11 +1,11 @@
-import { Box, Typography, Theme } from "@mui/material";
+import { Box, Typography, Theme, Button, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { TreeViewBaseItem } from '@mui/x-tree-view/models';
 import FolderIcon from '@mui/icons-material/Folder';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import ArticleIcon from '@mui/icons-material/Article';
 import { useState, useCallback } from "react";
-import { readDir, BaseDirectory, DirEntry } from "@tauri-apps/plugin-fs";
+import { readDir, writeTextFile, BaseDirectory, DirEntry } from "@tauri-apps/plugin-fs";
 interface FileTreeProps {
   viewRef: React.RefObject<any>;
   theme: Theme;
@@ -13,6 +13,8 @@ interface FileTreeProps {
   treeRef?: React.RefObject<any>;
   treeItems: TreeViewBaseItem[];
   expandedItems?: string[];
+  currentDirectory?: string;
+  onFileCreated?: (fileName: string, filePath: string) => void;
 }
 
 /*
@@ -163,14 +165,49 @@ export const focusPreviousItem = (
   return previousItem.id as string;
 };
 
-export function FileTree({ viewRef, theme, onFileSelect, treeRef, treeItems, expandedItems = [] }: FileTreeProps) {
+export function FileTree({ viewRef, theme, onFileSelect, treeRef, treeItems, expandedItems = [], currentDirectory = '', onFileCreated }: FileTreeProps) {
 
   const [_, setIsFocused] = useState(false);
   const [currentFocusedItem, setCurrentFocusedItem] = useState<string | null>(null);
   const [internalExpandedItems, setInternalExpandedItems] = useState<string[]>(expandedItems);
+  const [createFileDialogOpen, setCreateFileDialogOpen] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
   
   // Convert expanded items array to Set for efficient lookup
   const expandedSet = new Set(internalExpandedItems);
+
+  // Handle creating a new markdown file
+  const handleCreateFile = useCallback(async () => {
+    if (!newFileName.trim()) return;
+    
+    let fileName = newFileName.trim();
+    if (!fileName.endsWith('.md')) {
+      fileName += '.md';
+    }
+    
+    try {
+      const filePath = currentDirectory ? `${currentDirectory}/${fileName}` : fileName;
+      await writeTextFile(filePath, '', { baseDir: BaseDirectory.Config });
+      
+      if (onFileCreated) {
+        onFileCreated(fileName, filePath);
+      }
+      
+      setCreateFileDialogOpen(false);
+      setNewFileName('');
+    } catch (error) {
+      console.error('Error creating file:', error);
+    }
+  }, [newFileName, currentDirectory, onFileCreated]);
+
+  const handleOpenCreateDialog = useCallback(() => {
+    setCreateFileDialogOpen(true);
+  }, []);
+
+  const handleCloseCreateDialog = useCallback(() => {
+    setCreateFileDialogOpen(false);
+    setNewFileName('');
+  }, []);
 
   // Navigation functions for external use
   const handleFocusNext = useCallback(() => {
@@ -297,9 +334,19 @@ export function FileTree({ viewRef, theme, onFileSelect, treeRef, treeItems, exp
 
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        Notes
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6">
+          Notes
+        </Typography>
+        <Button 
+          variant="outlined" 
+          size="small" 
+          onClick={handleOpenCreateDialog}
+          sx={{ minWidth: 'auto', px: 1 }}
+        >
+          + New .md
+        </Button>
+      </Box>
       <RichTreeView
         onItemFocus={handleItemFocus}
         onBlur={handleBlur}
@@ -332,6 +379,34 @@ export function FileTree({ viewRef, theme, onFileSelect, treeRef, treeItems, exp
           },
         }}
       />
+      
+      <Dialog open={createFileDialogOpen} onClose={handleCloseCreateDialog}>
+        <DialogTitle>Create New Markdown File</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="File name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={newFileName}
+            onChange={(e) => setNewFileName(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleCreateFile();
+              }
+            }}
+            placeholder="Enter filename (without .md extension)"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+          <Button onClick={handleCreateFile} variant="contained">
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
