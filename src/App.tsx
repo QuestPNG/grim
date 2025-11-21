@@ -129,7 +129,7 @@ function App() {
         fileContent = decoder.decode(raw);
       } else {
         // Fallback to the original behavior for config directory
-        const raw = await readFile(fileId, { baseDir: BaseDirectory.Config });
+        const raw = await readFile(fileId, { baseDir: BaseDirectory.Document });
         const decoder = new TextDecoder("utf-8");
         fileContent = decoder.decode(raw);
       }
@@ -147,8 +147,8 @@ function App() {
     // Refresh the tree items to show the new file
     try {
       const notesDir = getNotesDirectory();
-      const dir = await readDir(notesDir, { baseDir: BaseDirectory.Config });
-      const newTreeItems = await convertTauriToTreeViewItemsRecursive(dir, notesDir, BaseDirectory.Config);
+      const dir = await readDir(notesDir, { baseDir: BaseDirectory.Document });
+      const newTreeItems = await convertTauriToTreeViewItemsRecursive(dir, notesDir, BaseDirectory.Document);
       setTreeItems(newTreeItems);
       
       // Optionally, select the newly created file
@@ -165,8 +165,8 @@ function App() {
       console.log("Fetching files...");
       try {
         const notesDir = getNotesDirectory();
-        const dir = await readDir(notesDir, { baseDir: BaseDirectory.Config });
-        const treeItems = await convertTauriToTreeViewItemsRecursive(dir, notesDir, BaseDirectory.Config);
+        const dir = await readDir(notesDir, { baseDir: BaseDirectory.Document });
+        const treeItems = await convertTauriToTreeViewItemsRecursive(dir, notesDir, BaseDirectory.Document);
         console.log("Tree Items:", treeItems);
         setTreeItems(treeItems);
       } catch(error) {
@@ -297,7 +297,7 @@ function App() {
       console.log("Current file contents:", valueRef.current);
       console.log("Current file:", currentFileRef.current);
       // Implement file saving logic here
-      writeTextFile(currentFileRef.current || "untitled.txt", valueRef.current || "", { baseDir: BaseDirectory.Config }).catch(err => {
+      writeTextFile(currentFileRef.current || "untitled.txt", valueRef.current || "", { baseDir: BaseDirectory.Document }).catch(err => {
         console.error("Error writing file:", err);
       });
     });
